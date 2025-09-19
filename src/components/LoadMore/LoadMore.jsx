@@ -1,12 +1,10 @@
-import React from 'react';
 
-const LoadMore = () => {
-  return (
-    <div>
-      <button>Load More</button>
-      {/* Load more functionality will be added here */}
-    </div>
-  );
-};
+const LoadMore = ({handLeMore}) => {
+    return(
+        <>
+            <button onClick={handLeMore} className="btnLoad">Load More</button>
+        </>
+    )
+}
 
 export default LoadMore;

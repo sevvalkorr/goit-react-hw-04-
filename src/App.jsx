@@ -1,35 +1,74 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from "react";
+import { ClipLoader } from "react-spinners";
+import SearchBar from "./components/SearchBar/SearchBar";
+import ImageGallery from "./components/ImageGallery/ImageGallery";
+import ImageModal from "./components/ImageModal/ImageModal";
+import LoadMore from "./components/LoadMore/LoadMore";
+import { getPhotos } from "./api";
+import './App.css';
 
 function App() {
-  const [count, setCount] = useState(0)
+  
+  const [search, setSearch] = useState("");
+  const [images, setImages] = useState([]);
+  const [selectedImage, setSelectedImage] = useState(null); 
+  const [loader, setLoader] = useState(false);
+  const [page, setPage] = useState(1);
+  const [error, setError] = useState(false);
 
+  const handleSearch = async (query) => {
+    setSearch(query);
+    try {
+      const data = await getPhotos(query, 1);
+      setImages(data); 
+      setLoader(true);
+      setError(false);
+    } catch (err) {
+      console.error(err);
+      setError(true);
+    }finally {
+      setLoader(false)
+    }
+  };
+
+  const openModal = (image) => setSelectedImage(image);
+  const closeModal = () => setSelectedImage(null);
+
+  const handLeMore = async () => {
+    setLoader(true);
+    try {
+      const data = await getPhotos(search, page + 1);
+      setImages((prevImages) =>
+      [...prevImages, ...data]
+      )
+      setPage(page + 1);
+    }catch(err){
+      console.log(err)
+    }finally{
+      setLoader(false);
+    }
+  }
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div>
+      <SearchBar setSearch={handleSearch} />
+      
+      <ImageGallery images={images} openModal={openModal} errorMessage={error}/>
+      {selectedImage && (
+        <ImageModal
+          image={selectedImage}
+          isOpen={!!selectedImage}
+          onRequestClose={closeModal}
+        />
+      )}
+      <div className="loader">
+        <ClipLoader color="#36d7b7" size={150} loading={loader} />
+        {!loader && images.length > 0 && (
+            <LoadMore handLeMore={handLeMore}/>
+          )}
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+      
+    </div>
+  );
 }
 
-export default App
+export default App;
